@@ -27,22 +27,22 @@
 </head>
 <body class="min-h-screen bg-slate-50 font-sans text-slate-800">
 
-    <!-- Navigasi -->
-    <nav class="bg-blue-800 text-white shadow-md sticky top-0 z-50">
+    <!-- Navigasi (Hitam/Putih) -->
+    <nav class="bg-black text-white shadow-md sticky top-0 z-50">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 <!-- Logo dan Tajuk -->
-                <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('gallery')">
-                    <img src="https://placehold.co/100x100/ffffff/1e40af?text=SKPK" alt="Logo Sekolah" class="h-10 w-10 object-cover rounded-full bg-white p-0.5" />
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="window.switchTab('gallery')">
+                    <img src="logo.png" alt="Logo Sekolah" class="h-10 w-10 object-contain rounded-full bg-white p-0.5" />
                     <span class="font-bold text-xl tracking-wide">Galeri SKPK Miri</span>
                 </div>
                 <!-- Butang Navigasi (Tab) -->
                 <div class="flex space-x-2">
-                    <button id="btn-gallery" onclick="switchTab('gallery')" class="px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center space-x-2 bg-blue-900 text-white">
+                    <button id="btn-gallery" onclick="window.switchTab('gallery')" class="px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center space-x-2 bg-gray-800 text-white">
                         <i data-lucide="layout-grid" class="w-4 h-4"></i>
                         <span class="hidden sm:inline">Galeri Utama</span>
                     </button>
-                    <button id="btn-admin" onclick="switchTab('admin')" class="px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center space-x-2 text-blue-200 hover:bg-blue-700">
+                    <button id="btn-admin" onclick="window.switchTab('admin')" class="px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center space-x-2 text-gray-400 hover:bg-gray-800">
                         <i data-lucide="settings" class="w-4 h-4"></i>
                         <span class="hidden sm:inline">Admin Panel</span>
                     </button>
@@ -65,119 +65,158 @@
             <div id="empty-gallery" class="hidden text-center py-20 bg-white rounded-xl shadow-sm border border-slate-200">
                 <i data-lucide="image" class="mx-auto text-slate-300 mb-4 w-12 h-12"></i>
                 <h3 class="text-lg font-medium text-slate-900">Tiada album dijumpai</h3>
-                <p class="text-slate-500">Sila tambah album baru di bahagian Admin.</p>
+                <p class="text-slate-500">Koleksi masih kosong. Sila tunggu kemas kini seterusnya.</p>
+            </div>
+
+            <!-- Paparan Sedang Memuatkan (Loading) -->
+            <div id="loading-gallery" class="text-center py-20">
+                <i data-lucide="loader-2" class="mx-auto text-black animate-spin mb-4 w-8 h-8"></i>
+                <p class="text-slate-500">Memuatkan data dari Firebase...</p>
             </div>
 
             <!-- Grid Album Galeri (Dijana oleh JS) -->
-            <div id="gallery-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div id="gallery-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 hidden">
                 <!-- Album akan dimuatkan di sini -->
             </div>
         </div>
 
         <!-- TAB 2: ADMIN PANEL -->
         <div id="admin-view" class="fade-in hidden-tab max-w-3xl mx-auto">
-            <div class="mb-6">
-                <h1 class="text-3xl font-extrabold text-slate-900">Panel Pengurusan Galeri</h1>
-                <p class="text-slate-500 mt-2">Tambah dan urus pautan Google Photos di sini.</p>
+            
+            <!-- Bahagian Log Masuk (Password Protection) -->
+            <div id="admin-login-view" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 max-w-md mx-auto mt-10 text-center">
+                <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 mb-4">
+                    <i data-lucide="lock" class="w-6 h-6 text-black"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-900 mb-2">Akses Admin</h2>
+                <p class="text-sm text-slate-500 mb-6">Sila masukkan kata laluan untuk menguruskan galeri.</p>
+                
+                <input type="password" id="admin-password" placeholder="Kata Laluan" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all mb-3 text-center" onkeypress="if(event.key === 'Enter') window.verifyAdmin()" />
+                
+                <p id="admin-password-error" class="hidden text-red-500 text-sm mb-3 font-medium">Kata laluan tidak sah.</p>
+                
+                <button onclick="window.verifyAdmin()" class="w-full py-3 bg-black hover:bg-gray-800 text-white font-semibold rounded-lg shadow-sm transition-colors flex items-center justify-center space-x-2">
+                    <span>Log Masuk</span>
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
             </div>
 
-            <!-- Borang Tambah Album -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8 mb-8">
-                <h2 class="text-xl font-bold text-slate-800 mb-6 flex items-center">
-                    <i data-lucide="plus" class="mr-2 text-blue-600 w-5 h-5"></i>
-                    Tambah Album Baru
-                </h2>
-                
-                <form id="add-album-form" class="space-y-5">
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-1">Nama Album / Aktiviti</label>
-                        <input type="text" id="newTitle" placeholder="Contoh: Kejohanan Olahraga Tahunan 2026" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" />
+            <!-- Panel Pengurusan (Tersembunyi sehingga Log Masuk Berjaya) -->
+            <div id="admin-dashboard" class="hidden">
+                <div class="mb-6">
+                    <h1 class="text-3xl font-extrabold text-slate-900">Panel Pengurusan Galeri</h1>
+                    <p class="text-slate-500 mt-2">Tambah dan urus pautan Google Photos ke dalam pangkalan data Firebase.</p>
+                </div>
+
+                <!-- Borang Tambah Album -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8 mb-8">
+                    <h2 class="text-xl font-bold text-slate-800 mb-6 flex items-center">
+                        <i data-lucide="plus" class="mr-2 text-black w-5 h-5"></i>
+                        Tambah Album Baru
+                    </h2>
+                    
+                    <form id="add-album-form" class="space-y-5">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1">Nama Album / Aktiviti</label>
+                            <input type="text" id="newTitle" placeholder="Contoh: Kejohanan Olahraga Tahunan 2026" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all" />
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1">URL Gambar Kulit (Banner)</label>
+                            <p class="text-xs text-slate-500 mb-2">Klik kanan pada gambar yang ingin dijadikan cover, pilih 'Copy image address' dan paste di sini.</p>
+                            <input type="url" id="newCoverUrl" placeholder="https://..." class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all" />
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1">URL Album Google Photos</label>
+                            <p class="text-xs text-slate-500 mb-2">Pautan (link) untuk dikongsi dari Google Photos.</p>
+                            <input type="url" id="newAlbumUrl" placeholder="https://photos.app.goo.gl/..." class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-black focus:border-black outline-none transition-all" />
+                        </div>
+
+                        <!-- Mesej Ralat Borang -->
+                        <div id="error-msg" class="hidden bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm font-medium">
+                            Sila isi semua ruangan!
+                        </div>
+
+                        <button id="submit-btn" type="submit" class="w-full sm:w-auto px-6 py-3 bg-black hover:bg-gray-800 text-white font-semibold rounded-lg shadow-sm transition-colors flex items-center justify-center space-x-2">
+                            <i data-lucide="upload-cloud" class="w-4 h-4"></i>
+                            <span>Simpan ke Firebase</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Senarai Album Sedia Ada -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="px-6 py-5 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+                        <h2 class="text-lg font-bold text-slate-800">Senarai Album Sedia Ada</h2>
+                        <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded font-semibold flex items-center gap-1">
+                            <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div> Live
+                        </span>
                     </div>
                     
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-1">URL Gambar Kulit (Banner)</label>
-                        <p class="text-xs text-slate-500 mb-2">Klik kanan pada gambar yang ingin dijadikan cover, pilih 'Copy image address' dan paste di sini.</p>
-                        <input type="url" id="newCoverUrl" placeholder="https://..." class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" />
+                    <div id="admin-album-list" class="divide-y divide-slate-100">
+                        <!-- Senarai akan dijana oleh JS -->
                     </div>
-
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-1">URL Album Google Photos</label>
-                        <p class="text-xs text-slate-500 mb-2">Pautan (link) untuk dikongsi dari Google Photos.</p>
-                        <input type="url" id="newAlbumUrl" placeholder="https://photos.app.goo.gl/..." class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" />
-                    </div>
-
-                    <!-- Mesej Ralat Borang -->
-                    <div id="error-msg" class="hidden bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm font-medium">
-                        Sila isi semua ruangan!
-                    </div>
-
-                    <button type="submit" class="w-full sm:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-sm transition-colors flex items-center justify-center space-x-2">
-                        <i data-lucide="plus" class="w-4 h-4"></i>
-                        <span>Simpan Album</span>
-                    </button>
-                </form>
-            </div>
-
-            <!-- Senarai Album Sedia Ada -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="px-6 py-5 border-b border-slate-200 bg-slate-50">
-                    <h2 class="text-lg font-bold text-slate-800">Senarai Album Sedia Ada</h2>
-                </div>
-                
-                <div id="admin-album-list" class="divide-y divide-slate-100">
-                    <!-- Senarai akan dijana oleh JS -->
                 </div>
             </div>
             
         </div>
     </main>
 
-    <!-- Logik Aplikasi -->
-    <script>
-        // Data Awal (Fallback jika tiada dalam localStorage)
-        const initialData = [
-            {
-                id: 1,
-                title: 'Hari Sukan Negara 2025',
-                coverUrl: 'https://images.unsplash.com/photo-1526676037777-05a232554f77?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-                albumUrl: 'https://photos.google.com'
-            },
-            {
-                id: 2,
-                title: 'Sambutan Hari Guru',
-                coverUrl: 'https://images.unsplash.com/photo-1577896851231-70ef18881754?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-                albumUrl: 'https://photos.google.com'
-            },
-            {
-                id: 3,
-                title: 'Perkhemahan Perdana Unit Beruniform',
-                coverUrl: 'https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-                albumUrl: 'https://photos.google.com'
-            }
-        ];
+    <!-- Logik Aplikasi & Firebase Module -->
+    <script type="module">
+        import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, deleteDoc, onSnapshot, doc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-        // Memuatkan album dari localStorage atau gunakan data awal
-        let albums = [];
-        const savedData = localStorage.getItem('school_gallery_html_albums');
+        // Konfigurasi Firebase dari pengguna (dan sokongan untuk Immersive Mode persekitaran pintar)
+        const userFirebaseConfig = {
+            apiKey: "AIzaSyClkBCRJPgZvpm0HE5_17qU5DCbReebaTc",
+            authDomain: "galeriskpkmiri.firebaseapp.com",
+            projectId: "galeriskpkmiri",
+            storageBucket: "galeriskpkmiri.firebasestorage.app",
+            messagingSenderId: "135704470176",
+            appId: "1:135704470176:web:7dba750db50c0247209fc5",
+            measurementId: "G-84Z5D6L1LN"
+        };
         
-        if (savedData) {
-            albums = JSON.parse(savedData);
-        } else {
-            albums = [...initialData];
-            saveToLocalStorage();
-        }
-
-        // Fungsi Simpan ke Local Storage
-        function saveToLocalStorage() {
-            if (albums.length > 0) {
-                localStorage.setItem('school_gallery_html_albums', JSON.stringify(albums));
-            } else {
-                localStorage.removeItem('school_gallery_html_albums');
+        let firebaseConfig = userFirebaseConfig;
+        if (typeof __firebase_config !== 'undefined') {
+            try {
+                firebaseConfig = typeof __firebase_config === 'string' ? JSON.parse(__firebase_config) : __firebase_config;
+            } catch (error) {
+                console.warn("Ralat membaca __firebase_config, menggunakan konfigurasi lalai.", error);
             }
         }
+
+        // Inisialisasi Firebase (Elak ralat double-initialization jika halaman disegar semula)
+        const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+        const db = getFirestore(app);
+
+        // Variables Global
+        let albums = [];
+        let isAdminAuthenticated = false;
+
+        // Laluan pangkalan data ringkas untuk projek anda
+        const albumsCollection = collection(db, 'albums');
+
+        // Fungsi Log Masuk Admin (Dieksport ke window untuk akses DOM)
+        window.verifyAdmin = function() {
+            const pwdInput = document.getElementById('admin-password').value;
+            const errorText = document.getElementById('admin-password-error');
+            
+            if(pwdInput === 'ICTSKPKMIRI') {
+                isAdminAuthenticated = true;
+                document.getElementById('admin-login-view').classList.add('hidden');
+                document.getElementById('admin-dashboard').classList.remove('hidden');
+                errorText.classList.add('hidden');
+                document.getElementById('admin-password').value = ''; // Kosongkan
+            } else {
+                errorText.classList.remove('hidden');
+            }
+        };
 
         // Fungsi Penukaran Tab Navigasi
-        function switchTab(tabId) {
+        window.switchTab = function(tabId) {
             const galleryView = document.getElementById('gallery-view');
             const adminView = document.getElementById('admin-view');
             const btnGallery = document.getElementById('btn-gallery');
@@ -187,24 +226,26 @@
                 galleryView.classList.remove('hidden-tab');
                 adminView.classList.add('hidden-tab');
                 
-                // Ubah gaya butang
-                btnGallery.className = "px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center space-x-2 bg-blue-900 text-white";
-                btnAdmin.className = "px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center space-x-2 text-blue-200 hover:bg-blue-700";
+                // Ubah gaya butang (Monokrom)
+                btnGallery.className = "px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center space-x-2 bg-gray-800 text-white";
+                btnAdmin.className = "px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center space-x-2 text-gray-400 hover:bg-gray-800";
             } else {
                 adminView.classList.remove('hidden-tab');
                 galleryView.classList.add('hidden-tab');
                 
-                // Ubah gaya butang
-                btnAdmin.className = "px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center space-x-2 bg-blue-900 text-white";
-                btnGallery.className = "px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center space-x-2 text-blue-200 hover:bg-blue-700";
+                // Ubah gaya butang (Monokrom)
+                btnAdmin.className = "px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center space-x-2 bg-gray-800 text-white";
+                btnGallery.className = "px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center space-x-2 text-gray-400 hover:bg-gray-800";
             }
-        }
+        };
 
-        // Fungsi Memaparkan Album dalam Grid Galeri
+        // Fungsi Memaparkan Album
         function renderGallery() {
             const grid = document.getElementById('gallery-grid');
             const emptyState = document.getElementById('empty-gallery');
+            const loadingState = document.getElementById('loading-gallery');
             
+            loadingState.classList.add('hidden'); // Sembunyi status loading
             grid.innerHTML = '';
 
             if (albums.length === 0) {
@@ -224,33 +265,31 @@
                     card.innerHTML = `
                         <div class="relative h-56 w-full overflow-hidden bg-slate-200">
                             <img src="${album.coverUrl}" alt="${album.title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.src='https://placehold.co/600x400/e2e8f0/475569?text=Gambar+Tidak+Jumpa';" />
-                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
-                                <div class="bg-white text-slate-900 p-3 rounded-full opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
+                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
+                                <div class="bg-white text-black p-3 rounded-full opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 shadow-lg">
                                     <i data-lucide="external-link" class="w-6 h-6"></i>
                                 </div>
                             </div>
                         </div>
                         <div class="p-5 flex-grow flex flex-col justify-between">
-                            <h3 class="text-lg font-bold text-slate-800 line-clamp-2 leading-tight group-hover:text-blue-600 transition-colors">${album.title}</h3>
-                            <div class="mt-4 flex items-center text-sm font-medium text-blue-600">
-                                Lihat Album <i data-lucide="external-link" class="w-3.5 h-3.5 ml-1"></i>
+                            <h3 class="text-lg font-bold text-slate-800 line-clamp-2 leading-tight group-hover:text-black transition-colors">${album.title}</h3>
+                            <div class="mt-4 flex items-center text-sm font-medium text-gray-500 group-hover:text-black transition-colors">
+                                Lihat Galeri Penuh <i data-lucide="external-link" class="w-3.5 h-3.5 ml-1"></i>
                             </div>
                         </div>
                     `;
                     grid.appendChild(card);
                 });
             }
-            // Muat semula ikon untuk elemen baru
-            lucide.createIcons();
+            if (window.lucide) lucide.createIcons();
         }
 
-        // Fungsi Memaparkan Senarai dalam Admin Panel
         function renderAdminList() {
             const listContainer = document.getElementById('admin-album-list');
             listContainer.innerHTML = '';
 
             if (albums.length === 0) {
-                listContainer.innerHTML = `<div class="p-6 text-center text-slate-500">Belum ada album direkodkan.</div>`;
+                listContainer.innerHTML = `<div class="p-6 text-center text-slate-500">Belum ada album direkodkan di pangkalan data.</div>`;
             } else {
                 albums.forEach(album => {
                     const item = document.createElement('div');
@@ -261,78 +300,125 @@
                             <img src="${album.coverUrl}" alt="thumbnail" class="w-20 h-14 object-cover rounded-md border border-slate-200 bg-slate-100" onerror="this.src='https://placehold.co/100x70?text=Error';" />
                             <div class="flex-1 min-w-0">
                                 <h4 class="text-sm font-bold text-slate-900 truncate">${album.title}</h4>
-                                <a href="${album.albumUrl}" target="_blank" rel="noopener noreferrer" class="text-xs text-blue-500 hover:underline truncate block mt-1">
+                                <a href="${album.albumUrl}" target="_blank" rel="noopener noreferrer" class="text-xs text-blue-600 hover:underline truncate block mt-1">
                                     ${album.albumUrl}
                                 </a>
                             </div>
                         </div>
-                        <button onclick="deleteAlbum(${album.id})" class="flex-shrink-0 p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Padam Album">
+                        <button onclick="window.deleteAlbum('${album.id}')" class="flex-shrink-0 p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Padam Album">
                             <i data-lucide="trash-2" class="w-5 h-5"></i>
                         </button>
                     `;
                     listContainer.appendChild(item);
                 });
             }
-            // Muat semula ikon untuk elemen baru
-            lucide.createIcons();
+            if (window.lucide) lucide.createIcons();
         }
 
-        // Fungsi Tambah Album Baru
-        document.getElementById('add-album-form').addEventListener('submit', function(e) {
+        // Fungsi Tambah Album ke Firebase
+        document.getElementById('add-album-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const titleInput = document.getElementById('newTitle').value.trim();
-            const coverInput = document.getElementById('newCoverUrl').value.trim();
-            const albumInput = document.getElementById('newAlbumUrl').value.trim();
+            const titleInput = document.getElementById('newTitle');
+            const coverInput = document.getElementById('newCoverUrl');
+            const albumInput = document.getElementById('newAlbumUrl');
             const errorMsg = document.getElementById('error-msg');
+            const submitBtn = document.getElementById('submit-btn');
 
-            // Validasi mudah
-            if (!titleInput || !coverInput || !albumInput) {
+            if (!titleInput.value.trim() || !coverInput.value.trim() || !albumInput.value.trim()) {
                 errorMsg.classList.remove('hidden');
                 return;
             }
-
+            
             errorMsg.classList.add('hidden');
+            
+            // UI Loading state
+            submitBtn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>Menyimpan...</span>`;
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-70');
+            if (window.lucide) lucide.createIcons();
 
             const newAlbum = {
-                id: Date.now(),
-                title: titleInput,
-                coverUrl: coverInput,
-                albumUrl: albumInput
+                title: titleInput.value.trim(),
+                coverUrl: coverInput.value.trim(),
+                albumUrl: albumInput.value.trim(),
+                timestamp: Date.now() // Untuk susunan masa
             };
 
-            // Tambah ke dalam array (paling atas)
-            albums.unshift(newAlbum);
-            saveToLocalStorage();
-            
-            // Kemaskini Paparan UI
-            renderGallery();
-            renderAdminList();
-
-            // Kosongkan form
-            document.getElementById('newTitle').value = '';
-            document.getElementById('newCoverUrl').value = '';
-            document.getElementById('newAlbumUrl').value = '';
+            try {
+                // Hantar ke Firebase
+                await addDoc(albumsCollection, newAlbum);
+                
+                // Kosongkan form
+                titleInput.value = '';
+                coverInput.value = '';
+                albumInput.value = '';
+            } catch (error) {
+                console.error("Ralat menambah album:", error);
+                errorMsg.innerText = "Gagal menyimpan. Sila periksa sambungan internet atau pangkalan data anda.";
+                errorMsg.classList.remove('hidden');
+                errorMsg.classList.remove('bg-red-50', 'text-red-600');
+                errorMsg.classList.add('bg-red-500', 'text-white');
+            } finally {
+                // Kembalikan UI butang
+                submitBtn.innerHTML = `<i data-lucide="upload-cloud" class="w-4 h-4"></i><span>Simpan ke Firebase</span>`;
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-70');
+                if (window.lucide) lucide.createIcons();
+            }
         });
 
-        // Fungsi Padam Album
-        function deleteAlbum(id) {
-            albums = albums.filter(album => album.id !== id);
-            saveToLocalStorage();
-            
-            // Kemaskini Paparan UI
-            renderGallery();
-            renderAdminList();
-        }
+        // Fungsi Padam Album dari Firebase
+        window.deleteAlbum = async function(id) {
+            // Pengganti kepada confirm() untuk UI yang lebih baik
+            try {
+                await deleteDoc(doc(db, 'albums', id));
+            } catch (error) {
+                console.error("Ralat memadam album:", error);
+            }
+        };
 
         // Inisialisasi awal aplikasi apabila dimuatkan
-        document.addEventListener('DOMContentLoaded', () => {
-            renderGallery();
-            renderAdminList();
+        function initApp() {
+            if (window.lucide) lucide.createIcons();
             
-            // Render ikon kali pertama
-            lucide.createIcons();
-        });
+            try {
+                // Dengar sebarang perubahan data dari Firebase secara Real-time
+                onSnapshot(albumsCollection, (snapshot) => {
+                    albums = [];
+                    snapshot.forEach(doc => {
+                        albums.push({ id: doc.id, ...doc.data() });
+                    });
+                    
+                    // Susun album berdasarkan masa terkini (Descending) di sisi klien (JS Memory)
+                    albums.sort((a, b) => b.timestamp - a.timestamp);
+                    
+                    renderGallery();
+                    renderAdminList();
+                }, (error) => {
+                    console.error("Ralat Firebase Snapshot:", error);
+                    const loadingGal = document.getElementById('loading-gallery');
+                    if (loadingGal) {
+                        loadingGal.innerHTML = `<p class="text-red-500 font-medium mb-2">Ralat menyambung ke pangkalan data.</p><p class="text-sm text-slate-500">Sila pastikan "Firestore Database" telah dicipta di Firebase Console.</p>`;
+                    }
+                });
+                
+            } catch (error) {
+                console.error("Ralat permulaan sistem:", error);
+                const loadingGal = document.getElementById('loading-gallery');
+                if (loadingGal) {
+                    loadingGal.innerHTML = `<p class="text-red-500 font-medium">Gagal mengakses sistem pangkalan data.</p>`;
+                }
+            }
+        }
+
+        // JALANKAN SISTEM - Modul JavaScript sering tertinggal event DOMContentLoaded, 
+        // jadi kita periksa status kesediaan dokumen (readyState) secara terus.
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
 
     </script>
 </body>
